@@ -210,19 +210,14 @@ def fetch_evals():
             driver.execute_script("window.print();")
             time.sleep(10)
 
-    #move all to desktop folder
-    shutil.move((os.path.expanduser('~\\Downloads\\Document.aspx.pdf')), name_folder+'\\BOL')
-    shutil.move((os.path.expanduser('~\\Downloads\\Document.aspx (1).pdf')), name_folder+'\\BOL')
-    shutil.move((os.path.expanduser('~\\Downloads\\Document.aspx (2).pdf')), name_folder+'\\BOL')
-    #rename accordingly
-    os.rename(name_folder + '\\BOL\\Document.aspx.pdf', name_folder + '\\BOL\\EVAL 1.pdf')    
-    os.rename(name_folder + '\\BOL\\Document.aspx (1).pdf', name_folder + '\\BOL\\EVAL 2.pdf')       
-    os.rename(name_folder + '\\BOL\\Document.aspx (2).pdf', name_folder + '\\BOL\\EVAL 3.pdf')  
+    #move all to desktop folder & rename accordingly
+    shutil.move((os.path.expanduser('~\\Downloads\\Document.aspx.pdf')), name_folder+'\\BOL\\EVAL 1.pdf')
+    shutil.move((os.path.expanduser('~\\Downloads\\Document.aspx (1).pdf')), name_folder+'\\BOL\\EVAL 2.pdf')
+    shutil.move((os.path.expanduser('~\\Downloads\\Document.aspx (2).pdf')), name_folder+'\\BOL\\EVAL 3.pdf')
 
 #! THIS IS WHERE I FETCH PRIMS
 
 def fetch_prims():
-
     block14_from = '3/16/2019'
     
     #get name figured out and create paths required
@@ -256,16 +251,15 @@ def fetch_prims():
     #switch focus back to the main tab
     driver.switch_to.window(driver.window_handles[0])
     #move and rename file accordingly 
-    shutil.move((os.path.expanduser('~\\Downloads\\MemberPFAListingAllCycles.pdf')), name_folder+'\\BOL')
-    shutil.move((os.path.expanduser('~\\Downloads\\MemberPFAListingAllCycles.csv')), name_folder+'\\BOL')    
-    os.rename(name_folder+'\\BOL\\MemberPFAListingAllCycles.pdf', name_folder + '\\BOL\\PRIMS.pdf') 
+    shutil.move((os.path.expanduser('~\\Downloads\\MemberPFAListingAllCycles.pdf')), name_folder+'\\BOL\\PRIMS.pdf')
+    shutil.move((os.path.expanduser('~\\Downloads\\MemberPFAListingAllCycles.csv')), name_folder+'\\BOL\\PRIMS_TEMP.csv')    
 
     #process PRIMS csv report to the data usable in block 20
     #lets create some dictionary to store cycle and result 
     prt_results = {}
     #open cvs file and spawn instance of csv reader
 
-    with open(name_folder+'\\BOL\\MemberPFAListingAllCycles.csv') as csv_file:
+    with open(name_folder+'\\BOL\\PRIMS_TEMP.csv') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         #for each row except header (header is identified as having 'textBox6' in the first column
         for row in csv_reader:
@@ -289,7 +283,6 @@ def fetch_prims():
     print(prt_results)
     input('press enter')  
 
-
 #! THIS IS WHERE I FETCH ETJ DATA
 
 #!fetching admin page
@@ -307,6 +300,7 @@ def fetch_admin():
     global block3_designation
     block3_designation = ((ocupation.split('('))[1]).split(')')[0]
     parent_activity = driver.find_element_by_id('ContentPlaceHolder1_lblParentUIC').text
+    #this is here to populate portion of block 43 and adjust block 15 accordingly if member transfers before eval cycle.
     pending_activity = driver.find_element_by_id('ContentPlaceHolder1_lblPendingUIC').text
     projected_rotation = driver.find_element_by_id('ContentPlaceHolder1_lblPRD').text
     global block6_uic
@@ -321,8 +315,7 @@ def fetch_admin():
 
     #navigate to ETJ Administrative Data and print, rename to ETJ Admin and move to the folder created on desktop
     driver.execute_script("window.print();")
-    shutil.move((os.path.expanduser('~\\Downloads\\ETJ.pdf')), name_folder+'\\ETJ\\ETJ.pdf')
-    os.rename(name_folder + '\\ETJ\\ETJ.pdf', name_folder + '\\ETJ\\ETJ Administrative Data.pdf')  
+    shutil.move((os.path.expanduser('~\\Downloads\\ETJ.pdf')), name_folder+'\\ETJ\\ETJ Administrative Data.pdf')
 
 #!fetching awards page
 def fetch_awards():
@@ -336,8 +329,7 @@ def fetch_awards():
     #navigate to ETJ Awards and print, rename to ETJ Awards and move to the folder created on desktop
     driver.find_element_by_xpath('//*[@id="ListTopMenu"]/li[8]/a').click()
     driver.execute_script("window.print();")
-    shutil.move((os.path.expanduser('~\\Downloads\\ETJ.pdf')), name_folder+'\\ETJ\\ETJ.pdf')
-    os.rename(name_folder + '\\ETJ\\ETJ.pdf', name_folder + '\\ETJ\\ETJ Awards Datas.pdf')   
+    shutil.move((os.path.expanduser('~\\Downloads\\ETJ.pdf')), name_folder+'\\ETJ\\ETJ Awards Datas.pdf')
 
 #!fetching quals/certs page
 def fetch_quals():
@@ -351,8 +343,10 @@ def fetch_quals():
     #navigate to ETJ Quals/Certs and print, rename to ETJ Quals and move to the folder created on desktop
     driver.find_element_by_xpath('//*[@id="ListTopMenu"]/li[7]/a').click()
     driver.execute_script("window.print();")
-    shutil.move((os.path.expanduser('~\\Downloads\\ETJ.pdf')), name_folder+'\\ETJ\\ETJ.pdf')
-    os.rename(name_folder + '\\ETJ\\ETJ.pdf', name_folder + '\\ETJ\\ETJ Quals & Certs Data.pdf')   
+    shutil.move((os.path.expanduser('~\\Downloads\\ETJ.pdf')), name_folder+'\\ETJ\\ETJ Quals & Certs Data.pdf')
+
+#! THIS IS WHERE WE PROCESS PRIMS CSV REPORT
+
 
 #! THIS IS WHERE WE WRITE DATABASE
 def database_writer():
@@ -417,8 +411,9 @@ def database_writer():
     conn.commit()
     cursor.close()
     conn.close()
+    #this one has to stay for the reason stated above. M$ Access Driver would crash since it's not real MADE but Jet database.
     os.rename(name_folder + '\\blank.mdb', name_folder + '\\'+ block2_rate + ' ' + (name.split())[1] + '.accdb')  
-    input('DATABASE WRITTEN SUCCESSFULLY') 
+    input('DATABASE WRITTEN SUCCESSFULLY')
 
 #**************************************** MAIN MENU ****************************************# 
 
